@@ -32,7 +32,7 @@ use tracing::instrument;
 
 use crate::cli_util::{CommandError, WorkspaceCommandHelper};
 use crate::formatter::Formatter;
-use crate::merge_tools::{self, MergeTool};
+use crate::merge_tools::{self, ExternalMergeTool};
 
 #[derive(clap::Args, Clone, Debug)]
 #[command(group(clap::ArgGroup::new("short-format").args(&["summary", "types"])))]
@@ -67,7 +67,7 @@ pub enum DiffFormat {
     Types,
     Git,
     ColorWords,
-    Tool(Box<MergeTool>),
+    Tool(Box<ExternalMergeTool>),
 }
 
 /// Returns a list of requested diff formats, which will never be empty.
@@ -114,7 +114,7 @@ fn diff_formats_from_args(
     .collect_vec();
     if let Some(name) = &args.tool {
         let tool = merge_tools::get_tool_config(settings, name)?
-            .unwrap_or_else(|| MergeTool::with_program(name));
+            .unwrap_or_else(|| ExternalMergeTool::with_program(name));
         formats.push(DiffFormat::Tool(Box::new(tool)));
     }
     Ok(formats)
@@ -125,7 +125,7 @@ fn default_diff_format(settings: &UserSettings) -> Result<DiffFormat, config::Co
     if let Some(args) = config.get("ui.diff.tool").optional()? {
         // External "tool" overrides the internal "format" option.
         let tool = merge_tools::get_tool_config_from_args(settings, &args)?
-            .unwrap_or_else(|| MergeTool::with_diff_args(&args));
+            .unwrap_or_else(|| ExternalMergeTool::with_diff_args(&args));
         return Ok(DiffFormat::Tool(Box::new(tool)));
     }
     let name = if let Some(name) = config.get_string("ui.diff.format").optional()? {
