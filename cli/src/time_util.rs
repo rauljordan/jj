@@ -82,6 +82,11 @@ pub fn format_duration(from: &Timestamp, to: &Timestamp, format: &timeago::Forma
         .unwrap_or_else(|| "<out-of-range date>".to_string())
 }
 
+pub fn format_to_utc(timestamp: &Timestamp) -> String {
+    let localized = datetime_from_timestamp(timestamp).unwrap();
+    DateTime::<Utc>::from_utc(localized.naive_utc(), Utc).to_string()
+}
+
 pub fn format_timestamp_relative_to_now(timestamp: &Timestamp) -> String {
     format_duration(timestamp, &Timestamp::now(), &timeago::Formatter::new())
 }
